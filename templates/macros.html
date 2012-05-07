@@ -1,0 +1,76 @@
+{% macro flash_messages(filter=None) %}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category,message in messages: %}
+        {% if not filter or category in filter %}
+          <div class="alert {{ 'alert-error' if category == 'error' }} 
+                          {{ 'alert-success' if category == 'success' }}
+                          {{ 'alert-info ' if category == 'info' }}">
+            <a class="close" data-dismiss="alert" href="#">&#xd7;</i></a>
+            {{ message }}
+          </div>
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+{% endmacro %}
+      
+{% macro form_field(form,name) %}
+  <div class="control-group {{ 'error' if form.errors.has_key(name) }}">
+    <label class="control-label" for="{{ form[name].id }}">
+      {{ form[name].label.text }}
+      {{ "*" if form[name].flags.required }}
+    </label>
+    <div class="controls">
+      {{ form[name] }}
+      <span class="help-inline">
+        {{ "<br>".join(form.errors[name]) if form.errors.has_key(name) else form[name].description }}
+      </span>
+    </div>
+  </div>
+{% endmacro %}
+
+{% macro radio_field(form,name,inline=False) %}
+  <div class="control-group {{ 'error' if form.errors.has_key(name) }}">
+    {{ form[name].label(class='control-label') }}
+    <div class="controls">
+      {% for option in form[name] %}
+        <label class="radio {{ 'inline' if inline }}" for="{{ option.id }}">
+          {{ option }}
+          {{ option.label.text }}
+        </label>
+      {% endfor %}
+      <span class="help-inline">
+        {{ "<br>".join(form.errors[name]) if form.errors.has_key(name) else form[name].description }}
+      </span>
+    </div>
+  </div>
+{% endmacro %}
+
+{% macro check_field(form,title,fields,help="",inline=False) %}
+  <div class="control-group }}">
+    <label class="control-label" for="{{ title.lower().replace(' ','_') }}">{{ title }}</label>
+    <div class="controls">
+      {% for check in fields %}
+        <label class="checkbox {{ 'inline' if inline }}" for="{{ check.id }}">
+          {{ form[check] }}
+          {{ form[check].label.text }} 
+        </label>
+      {% endfor %}
+      {% if inline %}
+        <span class="help-inline">{{ help }}</span>
+      {% else %}
+        <p class="help-block">{{ help }}</p>
+      {% endif %}
+    </div>
+  </div>
+{% endmacro %}
+
+{% macro form_actions(form,submit="Submit",cancel=True) %}
+  <div class="form-actions">
+    <button type="submit" class="btn btn-primary">{{ submit }}</button>
+    {% if cancel %}
+      <button class="btn">Cancel</button>
+    {% endif %}
+  </div>
+{% endmacro %}

@@ -1,0 +1,30 @@
+{% extends "base.html" if not request.headers.get("X-Pjax") %}
+{% from "macros.html" import flash_messages,form_field,radio_field,check_field,form_actions %}
+
+{% block content %}
+<div class="row showgrid">
+<div class="span2">
+  Some stuff
+</div>
+<div class="span10">
+<form class="form-horizontal well" method="POST">
+  {{ login_form.csrf_token }}
+  {{ form_field(login_form,'name') }}
+  {{ form_field(login_form,'password') }}
+  {{ form_field(login_form,'text') }}
+  {{ form_field(login_form,'check') }}
+  {{ check_field(login_form,"Check Here",['checkA','checkB','checkC'],inline=True) }}
+  {{ form_field(login_form,'date') }}
+  {{ radio_field(login_form,'options',inline=True) }}
+  {{ form_field(login_form,'select') }}
+  {{ form_field(login_form,'select_multiple') }}
+  {{ form_actions(login_form,'Log In') }}
+</form>
+</div>
+</div>
+{% endblock %}
+
+{% block messages %}
+  {{ flash_messages() }}
+{% endblock %}
+
