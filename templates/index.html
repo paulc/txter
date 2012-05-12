@@ -1,11 +1,20 @@
 {% extends "base.html" if not request.headers.get("X-Pjax") %}
-{% from "macros.html" import flash_messages,form_field %}
+{% from "macros.html" import flash_messages,form_field,radio_field,check_field,form_actions %}
 
 {% block content %}
-  <a href="{{ url_for('login') }}">Login</a>
+  <a href="{{ url_for('logout') }}">Logout</a>
+  <a href="{{ url_for('credit') }}">Credit</a>
+  <br/>
+  Credit: {{ credit }}
+  <form class="form-horizontal well" method="POST">
+    {{ txt_form.csrf_token }}
+    {{ form_field(txt_form,'to') }}
+    {{ form_field(txt_form,'content') }}
+    {{ form_actions(txt_form,'Send') }}
+  </form>
 {% endblock %}
 
 {% block messages %}
-  {{ flash_messages(['error','success']) }}
+  {{ flash_messages() }}
 {% endblock %}
 

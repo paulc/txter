@@ -1,10 +1,12 @@
 
 import os,sys
-from flask import Flask,abort,flash,redirect,request,render_template,session,url_for
+from functools import wraps
+from flask import Flask,abort,flash,g,redirect,request,render_template,session,url_for
 from flaskext.wtf import Form,TextField,PasswordField,BooleanField,DateTimeField, \
                          RadioField,SelectField,SelectMultipleField,TextAreaField, \
                          required,length
 from proxy import ReverseProxied
+from mediaburst import MediaBurst,MediaBurstError
 
 DEBUG = os.environ.get('DEBUG',False)
 SECRET_KEY = os.urandom(32)
@@ -13,32 +15,55 @@ app = Flask(__name__)
 app.config.from_object(__name__)
 
 class LoginForm(Form):
-    name = TextField(u"Account",description="Account Name",validators=[required(),length(min=2,max=5)])
-    password = PasswordField(u"Password",description="A Password",validators=[required()])
-    check = BooleanField(u"A Checkbox")
-    checkA = BooleanField(u"A")
-    checkB = BooleanField(u"B")
-    checkC = BooleanField(u"C")
-    date = DateTimeField(u"The Date")
-    text = TextAreaField(u"Some Text",validators=[length(min=10)])
-    options = RadioField(u"Some Options",default="b",choices=[("a","Choice A"),("b","Choice B"),("c","Choice C")])
-    select = SelectField(u"Some Options",default="b",choices=[("a","Choice A"),("b","Choice B"),("c","Choice C")])
-    select_multiple = SelectMultipleField(u"Some Options",default=["a","b"],choices=[("a","Choice A"),("b","Choice B"),("c","Choice C")])
+    user = TextField(u"Username",description="Mediaburst Username",validators=[required()])
+    password = PasswordField(u"Password",description="Mediaburst Password",validators=[required()])
 
-@app.route('/')
+class TxtForm(Form):
+    to = TextField(u"To",validators=[required()])
+    content = TextAreaField(u"Content",validators=[required(),length(min=1,max=459)])
+
+@app.route('/',methods=("GET","POST"))
 def root():
-    flash("Info","info")
-    flash("Error","error")
-    flash("Success","success")
-    flash("None")
-    return render_template("index.html")
+    if 'user' in session:
+        mb = MediaBurst(**session['user'])
+        txt_form = TxtForm()
+        if txt_form.validate_on_submit():
+            response = mb.send(**txt_form.data)
+            flash(response)
+        return render_template("index.html",txt_form=txt_form,credit=mb.credit())
+    else:
+        return redirect(url_for("login"))
+
+@app.route('/credit',methods=("GET","POST"))
+def credit():
+    if 'user' in session:
+        mb = MediaBurst(**session['user'])
+        return render_template("credit.html",credit=mb.credit())
+    else:
+        return redirect(url_for("login"))
+
+@app.route('/logout')
+def logout():
+    session = None
+    return redirect(url_for("login"))
 
 @app.route('/login',methods=("GET","POST"))
 def login():
     login_form = LoginForm()
     if login_form.validate_on_submit():
-        flash("Form OK")
-        return redirect(url_for("root"))
+        try:
+            mb = MediaBurst(**login_form.data)
+            mb.credit()
+            flash(u"Login Successful","success")
+            session['user'] = login_form.data
+            session.permament = True
+            return redirect(url_for("root"))
+        except MediaBurstError,e:
+            flash(u"Login Failed: %s" % e.message,"error")
+        except urllib2.HTTPError,e:
+            flash(u"HTTP Error: %s" % e.msg,"error")
+        except urllib2.URLError,e:
+            flash(u"Network Error: %s" % e.reason.strerror.capitalize(),"error")
     return render_template("login.html",login_form=login_form)
 
 if __name__ == '__main__':

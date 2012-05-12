@@ -2,14 +2,9 @@
 {% from "macros.html" import flash_messages,form_field,radio_field,check_field,form_actions %}
 
 {% block content %}
-<div class="row showgrid">
-<form class="form-horizontal well" method="POST">
-  {{ login_form.csrf_token }}
-  {{ form_field(login_form,'user') }}
-  {{ form_field(login_form,'password') }}
-  {{ form_actions(login_form,'Log In') }}
-</form>
-</div>
+  <a href="{{ url_for('root') }}">Home</a>
+  <br/>
+  Credit: {{ credit }}
 {% endblock %}
 
 {% block messages %}
